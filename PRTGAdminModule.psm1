@@ -53,7 +53,7 @@ function Get-prtgSensorInGroup([string]$StartingID=0)
 function Get-prtgDevicesInGroup ([string]$StartingID=0)
 {
     #if ($script:devicesCached -eq $false){
-        $url = "http://$PRTGHost/api/table.xml?content=devices&output=csvtable&columns=objid,probe,groupid,device,host,downsens,partialdownsens,downacksens,upsens,warnsens,pausedsens,unusualsens,undefinedsens,comments&id=$StartingID&count=2500&$auth"
+        $url = "http://$PRTGHost/api/table.xml?content=devices&output=csvtable&columns=objid,probe,groupid,device,host,downsens,partialdownsens,downacksens,upsens,warnsens,pausedsens,unusualsens,undefinedsens,tags,comments&id=$StartingID&count=2500&$auth"
         $request = Invoke-WebRequest -Uri $url -MaximumRedirection 0 -ErrorAction Ignore
         $getprtgDeviceRet = convertFrom-csv ($request.content) -WarningAction SilentlyContinue
         $getprtgDeviceRet 

@@ -295,6 +295,70 @@ function Add-prtgSensorToDevice
 
 
 ##############################################
+############Add-prtgSensorToDevice2###########
+##############################################
+# add's a sensor to a device (good for updating templates- adding a new sensor to 100's of devices)
+
+#it also returns the ID's of what it added
+
+#eg add one sensor to a group of devices
+#add-prtgSensorToDevice -SensorScriptBlock {Get-prtgSensorInGroup | where {$_.id -eq 8328}} -DevicesScriptBlock {Get-prtgDevicesInGroup 7633}
+
+#eg, add sensor 5520 to device 6409
+#add-prtgSensorToDevice -SensorScriptBlock {Get-prtgSensorInGroup | where {$_.id -eq 5520}} -DevicesScriptBlock {Get-prtgDevicesInGroup | where {$_.id -eq 6409}}
+
+#eg add a pages_left sensor to all devices with a tag of "printer"
+#TODO
+
+function Add-prtgSensorToDevice2
+{
+    [CmdletBinding()]
+    
+    param(
+            [Parameter(Mandatory=$False,ValueFromPipelineByPropertyName=$false)]
+            [scriptblock]$DevicesScriptBlock,
+
+            [Parameter(Mandatory=$False,ValueFromPipelineByPropertyName=$false)]
+            [scriptblock]$SensorScriptBlock
+          )
+
+    process
+    {
+        
+        if ($SensorScriptBlock -ne $null -and $DevicesScriptBlock -ne $null)
+        {
+            ##loop thru all the devices.
+            $Devices = &([scriptblock]::Create($DevicesScriptBlock))
+    
+            foreach($Device in  $Devices)
+            {
+                $DeviceID = $device.id
+                #"DeviceID=$DeviceID"
+
+                ##Loop thru all the sensors.
+                $Sensors = &([scriptblock]::Create($SensorScriptBlock))
+    
+                foreach($Sensor in  $Sensors)
+                {
+                    $SensorID = $Sensor.id
+                    #"SensorID=$SensorID"
+                    $NewName=$Sensor.Sensor
+                    $url = "http://$PRTGHost/api/duplicateobject.htm?id=$SensorID&Targetid=$DeviceID&name=$NewName&$auth"
+                    #$url
+                    $request = Invoke-WebRequest -Uri $url -MaximumRedirection 0 -ErrorAction Ignore
+					
+					write-output $request.headers.location.split("=")[1]
+                } # end foreach -  Sensor
+            } # end foreach - Device
+
+        } # end if
+
+    } # end process
+
+} # end function
+
+
+##############################################
 ############Add-prtgDevice############
 ##############################################
 # adds a new device in PRTG
@@ -477,6 +541,22 @@ function Set-PRTGObjectPause{
     ##ObjectID can be a sensor, device or Group
     $url = "http://$PRTGHost/api/pauseobjectfor.htm?id=$ObjectID&duration=$minutes&pausemsg=$Message&$auth"
     $request = Invoke-WebRequest -Uri $url -MaximumRedirection 0 -ErrorAction Ignore
+
+}
+
+##############################################
+##############Set-PRTGObjectResume############
+##############################################
+
+####unpause!
+function Set-PRTGObjectResume{
+    param
+    (
+    $ObjectID
+    )
+		#Resume monitoring for the new sensor:
+        $url = "http://$PRTGHost/api/pause.htm?id=$ObjectID&action=1&$auth"
+        $request = Invoke-WebRequest -Uri $url -MaximumRedirection 0 -ErrorAction Ignore
 
 }
 
